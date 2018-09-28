@@ -35,6 +35,8 @@ namespace RockWeb.Plugins.cc_newspring.AttendedCheckin
     [BinaryFileField( Rock.SystemGuid.BinaryFiletype.CHECKIN_LABEL, "Designated Single Label", "Select a label to print once per print job.  Unselect the label to print it with every print job.", false, "", "", 5 )]
     [BooleanField( "Reprint Designated Label", "By default, the designated label will print once for each print job. Toggle this setting to print once for the page, regardless of how many print jobs are created.", true, "", 6 )]
     [CodeEditorField( "Content Template", "The lava that will be used to render content to appear underneath the child's name.", CodeEditorMode.Lava, required: false, order: 7 )]
+    [BooleanField( "Batch Print Labels", "Select this option to print all labels without being cut until the end. Needs NewPoint's GetCheckinLabel.ashx installed.", false, "", 8 )]
+
     public partial class Confirm : CheckInBlock
     {
         #region Fields
@@ -564,11 +566,28 @@ namespace RockWeb.Plugins.cc_newspring.AttendedCheckin
                 {
                     var clientLabels = labels.Where( l => l.PrintFrom == PrintFrom.Client ).ToList();
                     var urlRoot = string.Format( "{0}://{1}", Request.Url.Scheme, Request.Url.Authority );
-                    clientLabels
-                        .OrderBy( l => l.PersonId )
-                        .ThenBy( l => l.Order )
-                        .ToList()
-                        .ForEach( l => l.LabelFile = urlRoot + l.LabelFile );
+
+                    var isBatchPrintLabels = GetAttributeValue( "BatchPrintLabels" ).AsBoolean();
+
+                    if ( isBatchPrintLabels == true )
+                    {
+                        //Using NewPointe's GetCheckinLabel file to delay the cutting of the labels till the last one. 
+                        //Make sure the ashx.cs file is in the ~/App_Code folder and ashx file is in the RockWeb folder.
+                        clientLabels
+                           .OrderBy( l => l.PersonId )
+                           .ThenBy( l => l.Order )
+                           .ToList()
+                           .ForEach( l => l.LabelFile = urlRoot + l.LabelFile.Replace( "GetFile.ashx", "GetCheckinLabel.ashx" ) );
+                        
+                    }
+                    else
+                    {
+                        clientLabels
+                            .OrderBy( l => l.PersonId )
+                            .ThenBy( l => l.Order )
+                            .ToList()
+                            .ForEach( l => l.LabelFile = urlRoot + l.LabelFile );
+                    }
 
                     if ( !GetAttributeValue( "ReprintDesignatedLabel" ).AsBoolean() )
                     {

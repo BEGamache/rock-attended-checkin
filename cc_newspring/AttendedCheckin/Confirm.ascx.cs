@@ -578,7 +578,12 @@ namespace RockWeb.Plugins.cc_newspring.AttendedCheckin
                            .ThenBy( l => l.Order )
                            .ToList()
                            .ForEach( l => l.LabelFile = urlRoot + l.LabelFile.Replace( "GetFile.ashx", "GetCheckinLabel.ashx" ) );
-                        
+
+                        for ( int i = 0; i < clientLabels.Count() - 1; i++ )
+                        {
+                            clientLabels.ElementAt( i ).LabelFile += "&delaycut=T";
+                        }
+
                     }
                     else
                     {

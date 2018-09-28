@@ -738,16 +738,18 @@ namespace RockWeb.Plugins.cc_newspring.AttendedCheckin
                         IsMessagingEnabled = true
                     } );
                 }
-                else if ( !phoneNumber.Number.Equals( unformattedNumber ) )
+                else if ( !phoneNumber.Number.Equals( unformattedNumber ) && !tbPhone.Text.StartsWith( "•" ) )
                 {
                     History.EvaluateChange( profileChanges, "Phone Number", phoneNumber.Number, tbPhone.Text );
                     phoneNumber.Number = unformattedNumber;
                 }
             }
-
-            History.EvaluateChange( profileChanges, "Email", dbPerson.Email, tbEmail.Text);
-            dbPerson.Email = tbEmail.Text;
-            checkinPerson.Person.Email = tbEmail.Text;
+            if ( !tbEmail.Text.EndsWith( "•" ) )
+            {
+                History.EvaluateChange( profileChanges, "Email", dbPerson.Email, tbEmail.Text );
+                dbPerson.Email = tbEmail.Text;
+                checkinPerson.Person.Email = tbEmail.Text;
+            }
 
             History.EvaluateChange( profileChanges, "Nickname", dbPerson.NickName, tbNickname.Text );
             dbPerson.NickName = tbNickname.Text.Length > 0 ? tbNickname.Text : tbFirstName.Text;
@@ -1110,6 +1112,36 @@ namespace RockWeb.Plugins.cc_newspring.AttendedCheckin
                     {
                         attribute.AddControl( phAttributes.Controls, person.GetAttributeValue( attribute.Key ), "", true, true );
                     }
+                }
+
+                //Load phone number
+                //Mask all but the last 4
+                if ( tbPhone != null && !String.IsNullOrWhiteSpace( tbPhone.Text ) )
+                {
+                    string phone4 = ( tbPhone.Text.Length > 3 ) ? tbPhone.Text.Substring( tbPhone.Text.Length - 4, 4 ) : String.Empty;
+                    if ( !String.IsNullOrWhiteSpace( phone4 ) )
+                    {
+                        tbPhone.Text = "••••••" + phone4;
+                    }
+                }
+                else
+                {
+                    tbPhone.Text = String.Empty;
+                }
+
+                //Load email
+                //Mask all but the first 3
+                if ( tbEmail != null && !String.IsNullOrWhiteSpace( tbEmail.Text ) )
+                {
+                    string beginningEmail = ( tbEmail.Text.Length > 3 ) ? tbEmail.Text.Substring( 0, 3 ) : String.Empty;
+                    if ( !String.IsNullOrWhiteSpace( beginningEmail ) )
+                    {
+                        tbEmail.Text = beginningEmail + "••••••";
+                    }
+                }
+                else
+                {
+                    tbEmail.Text = String.Empty;
                 }
             }
             else
